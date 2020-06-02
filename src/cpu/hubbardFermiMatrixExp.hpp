@@ -20,10 +20,6 @@ public:
     const DMatrix &expKappa(Species species, const bool inv) const;
     std::complex<double> logdetExpKappa(Species species, const bool inv) const;
 
-    void K(DSparseMatrix &k, Species species) const;
-    DMatrix Kinv(Species species) const;
-    std::complex<double> logdetKinv(Species species) const;
-
     void F(CDMatrix &f, std::size_t tp, const CDVector &phi,
            Species species, bool inv = false) const;
     CDMatrix F(std::size_t tp, const CDVector &phi,

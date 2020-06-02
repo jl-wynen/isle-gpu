@@ -90,22 +90,6 @@ std::complex<double>
     throw std::runtime_error("logdetExpKappa is only implemented for holes and inv=true");
 }
 
-void HubbardFermiMatrixCPU::K(DSparseMatrix &k, const Species UNUSED(species)) const
-{
-    k = IdMatrix<double>(nx());
-}
-
-DMatrix HubbardFermiMatrixCPU::Kinv(const Species UNUSED(species)) const
-{
-    return IdMatrix<double>(nx());
-}
-
-std::complex<double>
-  HubbardFermiMatrixCPU::logdetKinv(Species UNUSED(species)) const
-{
-    return 0;
-}
-
 void HubbardFermiMatrixCPU::F(CDMatrix &f,
                               const std::size_t tp, const CDVector &phi,
                               const Species species, const bool inv) const
