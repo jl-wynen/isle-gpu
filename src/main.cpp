@@ -3,12 +3,13 @@
 #include <memory>
 #include <vector>
 
-#include "cpu/math.hpp"
-#include "cpu/hubbardFermiMatrixExp.hpp"
+#include <blaze/Blaze.h>
 
-DSparseMatrix makeTriangle()
+#include "cpu/cpu.hpp"
+
+auto makeTriangle()
 {
-    DSparseMatrix hopping(3, 3);
+    blaze::CompressedMatrix<double> hopping(3, 3);
     hopping.set(0, 1, 1.0);
     hopping.set(1, 0, 1.0);
     hopping.set(0, 2, 1.0);
@@ -26,8 +27,9 @@ int main()
     constexpr double U = 4;
     constexpr double beta = 6;
 
-    HubbardFermiMatrixCPU hfm(hopping * beta / nt, 0, -1);
+    blaze::DynamicVector<std::complex<double>> phi(hopping.rows()*nt, 0.0);
 
-    CDVector phi(hopping.rows() * nt);
-    std::cout << logdetM(hfm, phi, Species::PARTICLE);
+    auto cpuLDM = cpu::logdetM(hopping, phi, beta);
+    std::cout << "CPU: " << cpuLDM[0] << ' ' << cpuLDM[1] << '\n';
+
 }

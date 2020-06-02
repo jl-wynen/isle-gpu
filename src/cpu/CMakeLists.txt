@@ -3,7 +3,9 @@ add_library(isle_cpu STATIC
             tmp.hpp
             math.hpp
             hubbardFermiMatrixExp.hpp
-            hubbardFermiMatrixExp.cpp)
+            hubbardFermiMatrixExp.cpp
+            cpu.cpp
+            cpu.hpp)
 
 # set standard
 set_target_properties(isle_cpu PROPERTIES
