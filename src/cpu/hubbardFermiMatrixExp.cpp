@@ -45,8 +45,7 @@ namespace {
     }
 }  // namespace
 
-
-HubbardFermiMatrixExp::HubbardFermiMatrixExp(const DSparseMatrix &kappaTilde,
+HubbardFermiMatrixCPU::HubbardFermiMatrixCPU(const DSparseMatrix &kappaTilde,
                                              const double muTilde,
                                              const std::int8_t sigmaKappa)
   : _kappa{ kappaTilde }, _mu{ muTilde }, _sigmaKappa{ sigmaKappa },
@@ -61,7 +60,7 @@ HubbardFermiMatrixExp::HubbardFermiMatrixExp(const DSparseMatrix &kappaTilde,
     }
 }
 
-const DMatrix &HubbardFermiMatrixExp::expKappa(const Species species, const bool inv) const
+const DMatrix &HubbardFermiMatrixCPU::expKappa(const Species species, const bool inv) const
 {
     switch (species) {
     case Species::PARTICLE:
@@ -81,7 +80,8 @@ const DMatrix &HubbardFermiMatrixExp::expKappa(const Species species, const bool
     throw std::invalid_argument("Unknown species");
 }
 
-std::complex<double> HubbardFermiMatrixExp::logdetExpKappa(const Species species,
+std::complex<double>
+HubbardFermiMatrixCPU::logdetExpKappa(const Species species,
                                                            const bool inv) const
 {
     if (species == Species::HOLE && inv) {
@@ -90,22 +90,23 @@ std::complex<double> HubbardFermiMatrixExp::logdetExpKappa(const Species species
     throw std::runtime_error("logdetExpKappa is only implemented for holes and inv=true");
 }
 
-void HubbardFermiMatrixExp::K(DSparseMatrix &k, const Species UNUSED(species)) const
+void HubbardFermiMatrixCPU::K(DSparseMatrix &k, const Species UNUSED(species)) const
 {
     k = IdMatrix<double>(nx());
 }
 
-DMatrix HubbardFermiMatrixExp::Kinv(const Species UNUSED(species)) const
+DMatrix HubbardFermiMatrixCPU::Kinv(const Species UNUSED(species)) const
 {
     return IdMatrix<double>(nx());
 }
 
-std::complex<double> HubbardFermiMatrixExp::logdetKinv(Species UNUSED(species)) const
+std::complex<double>
+HubbardFermiMatrixCPU::logdetKinv(Species UNUSED(species)) const
 {
     return 0;
 }
 
-void HubbardFermiMatrixExp::F(CDMatrix &f,
+void HubbardFermiMatrixCPU::F(CDMatrix &f,
                               const std::size_t tp, const CDVector &phi,
                               const Species species, const bool inv) const
 {
@@ -131,7 +132,7 @@ void HubbardFermiMatrixExp::F(CDMatrix &f,
     }
 }
 
-CDMatrix HubbardFermiMatrixExp::F(const std::size_t tp, const CDVector &phi,
+CDMatrix HubbardFermiMatrixCPU::F(const std::size_t tp, const CDVector &phi,
                                   const Species species, const bool inv) const
 {
     CDMatrix f;
@@ -139,29 +140,29 @@ CDMatrix HubbardFermiMatrixExp::F(const std::size_t tp, const CDVector &phi,
     return f;
 }
 
-const SparseMatrix<double> &HubbardFermiMatrixExp::kappaTilde() const noexcept
+const SparseMatrix<double> &HubbardFermiMatrixCPU::kappaTilde() const noexcept
 {
     return _kappa;
 }
 
-double HubbardFermiMatrixExp::muTilde() const noexcept
+double HubbardFermiMatrixCPU::muTilde() const noexcept
 {
     return _mu;
 }
 
-std::int8_t HubbardFermiMatrixExp::sigmaKappa() const noexcept
+std::int8_t HubbardFermiMatrixCPU::sigmaKappa() const noexcept
 {
     return _sigmaKappa;
 }
 
-std::size_t HubbardFermiMatrixExp::nx() const noexcept
+std::size_t HubbardFermiMatrixCPU::nx() const noexcept
 {
     return _kappa.rows();
 }
 
 namespace {
     // Use version log(det(1+hat{A})).
-    std::complex<double> logdetM_p(const HubbardFermiMatrixExp &hfm,
+    std::complex<double> logdetM_p(const HubbardFermiMatrixCPU &hfm,
                                    const CDVector &phi)
     {
         const auto NX = hfm.nx();
@@ -182,7 +183,7 @@ namespace {
     }
 
     // Use version -i Phi - N_t log(det(e^{-sigmaKappa*kappa-mu})) + log(det(1+hat{A}^{-1})).
-    std::complex<double> logdetM_h(const HubbardFermiMatrixExp &hfm,
+    std::complex<double> logdetM_h(const HubbardFermiMatrixCPU &hfm,
                                    const CDVector &phi)
     {
         const auto NX = hfm.nx();
@@ -204,7 +205,7 @@ namespace {
     }
 }  // namespace
 
-std::complex<double> logdetM(const HubbardFermiMatrixExp &hfm,
+std::complex<double> logdetM(const HubbardFermiMatrixCPU &hfm,
                              const CDVector &phi, const Species species)
 {
     if (hfm.muTilde() != 0) {
@@ -221,7 +222,7 @@ std::complex<double> logdetM(const HubbardFermiMatrixExp &hfm,
     throw std::invalid_argument("Unknown species");
 }
 
-CDMatrix solveM(const HubbardFermiMatrixExp &hfm, const CDVector &phi,
+CDMatrix solveM(const HubbardFermiMatrixCPU &hfm, const CDVector &phi,
                 const Species species, const CDMatrix &rhss)
 {
     if (hfm.muTilde() != 0) {

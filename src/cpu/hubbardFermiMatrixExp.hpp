@@ -1,21 +1,20 @@
-#ifndef HUBBARD_FERMI_MATRIX_EXP_HPP
-#define HUBBARD_FERMI_MATRIX_EXP_HPP
+#ifndef HUBBARD_FERMI_MATRIX_CPU_HPP
+#define HUBBARD_FERMI_MATRIX_CPU_HPP
 
 #include <vector>
 
 #include "math.hpp"
 #include "species.hpp"
 
-class HubbardFermiMatrixExp
-{
+class HubbardFermiMatrixCPU {
 public:
-    HubbardFermiMatrixExp(const SparseMatrix<double> &kappaTilde,
+  HubbardFermiMatrixCPU(const SparseMatrix<double> &kappaTilde,
                           double muTilde, std::int8_t sigmaKappa);
-    HubbardFermiMatrixExp(const HubbardFermiMatrixExp &) = default;
-    HubbardFermiMatrixExp &operator=(const HubbardFermiMatrixExp &) = default;
-    HubbardFermiMatrixExp(HubbardFermiMatrixExp &&) = default;
-    HubbardFermiMatrixExp &operator=(HubbardFermiMatrixExp &&) = default;
-    ~HubbardFermiMatrixExp() = default;
+  HubbardFermiMatrixCPU(const HubbardFermiMatrixCPU &) = default;
+  HubbardFermiMatrixCPU &operator=(const HubbardFermiMatrixCPU &) = default;
+  HubbardFermiMatrixCPU(HubbardFermiMatrixCPU &&) = default;
+  HubbardFermiMatrixCPU &operator=(HubbardFermiMatrixCPU &&) = default;
+    ~HubbardFermiMatrixCPU() = default;
 
     const DMatrix &expKappa(Species species, const bool inv) const;
     std::complex<double> logdetExpKappa(Species species, const bool inv) const;
@@ -46,10 +45,10 @@ private:
     std::complex<double> _logdetExpKappahInv;
 };
 
-std::complex<double> logdetM(const HubbardFermiMatrixExp &hfm, const CDVector &phi,
+std::complex<double> logdetM(const HubbardFermiMatrixCPU &hfm, const CDVector &phi,
                              Species species);
 
-CDMatrix solveM(const HubbardFermiMatrixExp &hfm, const CDVector &phi,
+CDMatrix solveM(const HubbardFermiMatrixCPU &hfm, const CDVector &phi,
                 Species species, const CDMatrix &rhss);
 
-#endif  // ndef HUBBARD_FERMI_MATRIX_HPP
+#endif
