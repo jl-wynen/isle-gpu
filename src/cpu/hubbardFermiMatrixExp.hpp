@@ -6,14 +6,15 @@
 #include "math.hpp"
 #include "species.hpp"
 
-class HubbardFermiMatrixCPU {
+class HubbardFermiMatrixCPU
+{
 public:
-  HubbardFermiMatrixCPU(const SparseMatrix<double> &kappaTilde,
+    HubbardFermiMatrixCPU(const SparseMatrix<double> &kappaTilde,
                           double muTilde, std::int8_t sigmaKappa);
-  HubbardFermiMatrixCPU(const HubbardFermiMatrixCPU &) = default;
-  HubbardFermiMatrixCPU &operator=(const HubbardFermiMatrixCPU &) = default;
-  HubbardFermiMatrixCPU(HubbardFermiMatrixCPU &&) = default;
-  HubbardFermiMatrixCPU &operator=(HubbardFermiMatrixCPU &&) = default;
+    HubbardFermiMatrixCPU(const HubbardFermiMatrixCPU &) = default;
+    HubbardFermiMatrixCPU &operator=(const HubbardFermiMatrixCPU &) = default;
+    HubbardFermiMatrixCPU(HubbardFermiMatrixCPU &&) = default;
+    HubbardFermiMatrixCPU &operator=(HubbardFermiMatrixCPU &&) = default;
     ~HubbardFermiMatrixCPU() = default;
 
     const DMatrix &expKappa(Species species, const bool inv) const;

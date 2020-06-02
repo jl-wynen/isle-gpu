@@ -19,7 +19,6 @@ DSparseMatrix makeTriangle()
 }
 
 
-
 int main()
 {
     auto hopping = makeTriangle();
@@ -27,8 +26,8 @@ int main()
     constexpr double U = 4;
     constexpr double beta = 6;
 
-    HubbardFermiMatrixCPU hfm(hopping*beta/nt, 0, -1);
+    HubbardFermiMatrixCPU hfm(hopping * beta / nt, 0, -1);
 
-    CDVector phi(hopping.rows()*nt);
+    CDVector phi(hopping.rows() * nt);
     std::cout << logdetM(hfm, phi, Species::PARTICLE);
 }

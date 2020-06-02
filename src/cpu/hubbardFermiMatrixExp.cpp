@@ -7,42 +7,42 @@
 using namespace std::complex_literals;
 
 namespace {
-    template <typename MT>
-    void resizeMatrix(MT &mat, const std::size_t target)
-    {
+template <typename MT>
+void resizeMatrix(MT &mat, const std::size_t target)
+{
 #ifndef NDEBUG
-        if (mat.rows() != mat.columns()) {
-            throw std::invalid_argument("Matrix is not square.");
-        }
+    if (mat.rows() != mat.columns()) {
+        throw std::invalid_argument("Matrix is not square.");
+    }
 #endif
-        if (mat.rows() != target) {
-            mat.resize(target, target, false);
-        }
+    if (mat.rows() != target) {
+        mat.resize(target, target, false);
     }
+}
 
-    auto computeExponential(const DSparseMatrix &kappa,
-                            const double mu,
-                            const std::int8_t sigmaKappa,
-                            const Species species,
-                            const bool inv)
-    {
-        switch (species) {
-        case Species::PARTICLE:
-            if (inv) {
-                return expmSym(-kappa + mu * IdMatrix<double>(kappa.rows()));
-            } else {
-                return expmSym(kappa - mu * IdMatrix<double>(kappa.rows()));
-            }
-        case Species::HOLE:
-            if (inv) {
-                return expmSym(-sigmaKappa * kappa - mu * IdMatrix<double>(kappa.rows()));
-            } else {
-                return expmSym(sigmaKappa * kappa + mu * IdMatrix<double>(kappa.rows()));
-            }
+auto computeExponential(const DSparseMatrix &kappa,
+                        const double mu,
+                        const std::int8_t sigmaKappa,
+                        const Species species,
+                        const bool inv)
+{
+    switch (species) {
+    case Species::PARTICLE:
+        if (inv) {
+            return expmSym(-kappa + mu * IdMatrix<double>(kappa.rows()));
+        } else {
+            return expmSym(kappa - mu * IdMatrix<double>(kappa.rows()));
         }
-        // Strictly speaking impossible to reach but gcc complains.
-        throw std::invalid_argument("Unknown species");
+    case Species::HOLE:
+        if (inv) {
+            return expmSym(-sigmaKappa * kappa - mu * IdMatrix<double>(kappa.rows()));
+        } else {
+            return expmSym(sigmaKappa * kappa + mu * IdMatrix<double>(kappa.rows()));
+        }
     }
+    // Strictly speaking impossible to reach but gcc complains.
+    throw std::invalid_argument("Unknown species");
+}
 }  // namespace
 
 HubbardFermiMatrixCPU::HubbardFermiMatrixCPU(const DSparseMatrix &kappaTilde,
@@ -81,8 +81,8 @@ const DMatrix &HubbardFermiMatrixCPU::expKappa(const Species species, const bool
 }
 
 std::complex<double>
-HubbardFermiMatrixCPU::logdetExpKappa(const Species species,
-                                                           const bool inv) const
+  HubbardFermiMatrixCPU::logdetExpKappa(const Species species,
+                                        const bool inv) const
 {
     if (species == Species::HOLE && inv) {
         return _logdetExpKappahInv;
@@ -101,7 +101,7 @@ DMatrix HubbardFermiMatrixCPU::Kinv(const Species UNUSED(species)) const
 }
 
 std::complex<double>
-HubbardFermiMatrixCPU::logdetKinv(Species UNUSED(species)) const
+  HubbardFermiMatrixCPU::logdetKinv(Species UNUSED(species)) const
 {
     return 0;
 }
@@ -161,48 +161,48 @@ std::size_t HubbardFermiMatrixCPU::nx() const noexcept
 }
 
 namespace {
-    // Use version log(det(1+hat{A})).
-    std::complex<double> logdetM_p(const HubbardFermiMatrixCPU &hfm,
-                                   const CDVector &phi)
-    {
-        const auto NX = hfm.nx();
-        const auto NT = getNt(phi, NX);
-        const auto species = Species::PARTICLE;
+// Use version log(det(1+hat{A})).
+std::complex<double> logdetM_p(const HubbardFermiMatrixCPU &hfm,
+                               const CDVector &phi)
+{
+    const auto NX = hfm.nx();
+    const auto NT = getNt(phi, NX);
+    const auto species = Species::PARTICLE;
 
-        // first factor F
-        CDMatrix f;
-        CDMatrix B = hfm.F(0, phi, species, false);
-        // other factors
-        for (std::size_t t = 1; t < NT; ++t) {
-            hfm.F(f, t, phi, species, false);
-            B = f * B;
-        }
-
-        B += IdMatrix<std::complex<double>>(NX);
-        return toFirstLogBranch(ilogdet(B));
+    // first factor F
+    CDMatrix f;
+    CDMatrix B = hfm.F(0, phi, species, false);
+    // other factors
+    for (std::size_t t = 1; t < NT; ++t) {
+        hfm.F(f, t, phi, species, false);
+        B = f * B;
     }
 
-    // Use version -i Phi - N_t log(det(e^{-sigmaKappa*kappa-mu})) + log(det(1+hat{A}^{-1})).
-    std::complex<double> logdetM_h(const HubbardFermiMatrixCPU &hfm,
-                                   const CDVector &phi)
-    {
-        const auto NX = hfm.nx();
-        const auto NT = getNt(phi, NX);
+    B += IdMatrix<std::complex<double>>(NX);
+    return toFirstLogBranch(ilogdet(B));
+}
 
-        // build product of F^{-1}
-        auto f = hfm.F(0, phi, Species::HOLE, true);
-        CDMatrix aux = f;  // the matrix under the determinant
-        for (std::size_t t = 1; t < NT; ++t) {
-            hfm.F(f, t, phi, Species::HOLE, true);
-            aux = aux * f;
-        }
-        aux += IdMatrix<std::complex<double>>(NX);
+// Use version -i Phi - N_t log(det(e^{-sigmaKappa*kappa-mu})) + log(det(1+hat{A}^{-1})).
+std::complex<double> logdetM_h(const HubbardFermiMatrixCPU &hfm,
+                               const CDVector &phi)
+{
+    const auto NX = hfm.nx();
+    const auto NT = getNt(phi, NX);
 
-        // add Phi and return
-        return toFirstLogBranch(-static_cast<double>(NT) * hfm.logdetExpKappa(Species::HOLE, true)
-                                - 1.0i * blaze::sum(phi)
-                                + ilogdet(aux));
+    // build product of F^{-1}
+    auto f = hfm.F(0, phi, Species::HOLE, true);
+    CDMatrix aux = f;  // the matrix under the determinant
+    for (std::size_t t = 1; t < NT; ++t) {
+        hfm.F(f, t, phi, Species::HOLE, true);
+        aux = aux * f;
     }
+    aux += IdMatrix<std::complex<double>>(NX);
+
+    // add Phi and return
+    return toFirstLogBranch(-static_cast<double>(NT) * hfm.logdetExpKappa(Species::HOLE, true)
+                            - 1.0i * blaze::sum(phi)
+                            + ilogdet(aux));
+}
 }  // namespace
 
 std::complex<double> logdetM(const HubbardFermiMatrixCPU &hfm,
