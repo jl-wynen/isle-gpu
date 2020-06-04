@@ -34,10 +34,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_compile_options(gisle PUBLIC ${GCC_CLANG_WARNINGS} ${GCC_EXTRA_WARNINGS})
 endif ()
 
-#add_subdirectory(gpu)
-#set_target_properties(gisle PROPERTIES
-#                      CUDA_SEPARABLE_COMPILATION ON)
-#target_link_libraries(gisle PRIVATE isle_gpu)
+add_subdirectory(gpu)
+set_target_properties(gisle PROPERTIES
+                      CUDA_SEPARABLE_COMPILATION ON)
+target_link_libraries(gisle PRIVATE isle_gpu)
 
 add_subdirectory(cpu)
 target_link_libraries(gisle PRIVATE isle_cpu)
