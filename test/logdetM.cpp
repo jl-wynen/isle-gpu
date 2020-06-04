@@ -22,14 +22,15 @@ auto makeLattices()
 
 TEST_CASE("Compare logdetM on CPU and GPU", "[logdetM]")
 {
+    std::mt19937 rng{std::random_device{}()};
+
     auto const &hopping = GENERATE_REF(from_range(makeLattices()));
     size_t const nt = GENERATE(1u, 2u, 4u, 5u, 8u, 64u, 128u);
     double const beta = GENERATE(6.0, 8.0);
     double const phiWidth = GENERATE(take(NREP, random(0.01, 1.0)));
     CAPTURE(hopping.rows(), nt, beta, phiWidth);
 
-    auto const phi = makeRandomConfig(0, randomWidth(rng),
-                                      hopping.rows() * nt, rng);
+    auto const phi = makeRandomConfig(0, phiWidth, hopping.rows() * nt, rng);
 
     auto const cpuLDM = cpu::logdetM(hopping, phi, beta);
     auto const gpuLDM = gpu::logdetM(flatHoppingMatrix(hopping * beta / nt).data(),
