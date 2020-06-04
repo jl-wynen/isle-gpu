@@ -167,22 +167,19 @@ __global__ void constructF(thrust::complex<double> *f,
                            thrust::complex<double> const *phi,
                            double const *expKappa,
                            int nx,
-                           thrust::complex<double> sign,
+                           thrust::complex<double> const sign,
                            bool inv)
 {
-    if (inv) {
-        // f = e^phi * e^kappa  (up to signs in exponents)
-        for (int i = 0; i < nx; ++i) {
-            for (int j = 0; j < nx; ++j) {
-                f[j * nx + i] = cexp(sign * phi[i]) * expKappa[j * nx + i];
-            }
-        }
-    } else {
-        // f = e^kappa * e^phi  (up to signs in exponents)
-        for (int i = 0; i < nx; ++i) {
-            for (int j = 0; j < nx; ++j) {
-                f[j * nx + i] = cexp(sign * phi[j]) * expKappa[j * nx + i];
-            }
+    int const row = blockIdx.x * blockDim.x + threadIdx.x;
+    int const col = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (row < nx && col < nx) {
+        if (inv) {
+            // f = e^phi * e^kappa  (up to signs in exponents)
+            f[col * nx + row] = cexp(sign * phi[row]) * expKappa[col * nx + row];
+        } else {
+            // f = e^kappa * e^phi  (up to signs in exponents)
+            f[col * nx + row] = cexp(sign * phi[col]) * expKappa[col * nx + row];
         }
     }
 }
@@ -199,17 +196,25 @@ void HubbardFermiMatrixGPU::F(CDDVector &f, std::size_t tp, const CDDVector &phi
                        || (species == Species::HOLE && inv))
                         ? +1.0i
                         : -1.0i;
-    constructF<<<1, 1>>>(thrust::raw_pointer_cast(f.data()),
-                         thrust::raw_pointer_cast(phi.data()) + (tm1 * NX),
-                         thrust::raw_pointer_cast(expKappa(species, inv).data()),
-                         NX,
-                         sign,
-                         inv);
+    const dim3 gridSize((NX + 255) / 256, NX);
+    constexpr static dim3 blockSize(256, 1);
+    constructF<<<gridSize, blockSize>>>(thrust::raw_pointer_cast(f.data()),
+                                        thrust::raw_pointer_cast(phi.data()) + (tm1 * NX),
+                                        thrust::raw_pointer_cast(expKappa(species, inv).data()),
+                                        NX,
+                                        sign,
+                                        inv);
+    auto result = cudaGetLastError();
+    if (result != cudaSuccess) {
+        throw std::runtime_error(std::string("Failed to call kernel constructF: ")
+                                 + cudaGetErrorString(result));
+    }
 }
 
 __global__ void addIdentiy(thrust::complex<double> *matrix, int n)
 {
-    for (int i = 0; i < n; ++i) {
+    int const i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
         matrix[i * n + i] += 1.0;
     }
 }
@@ -249,7 +254,7 @@ std::complex<double> logdetM_p(const HubbardFermiMatrixGPU &hfm,
         swap(aux, B);
     }
 
-    addIdentiy<<<1, 1>>>(thrust::raw_pointer_cast(B.data()), NX);
+    addIdentiy<<<(NX + 255) / 256, 256>>>(thrust::raw_pointer_cast(B.data()), NX);
 
     thrust::host_vector<thrust::complex<double>> hB = B;
     return toFirstLogBranch(logdet(reinterpret_cast<std::complex<double> *>(thrust::raw_pointer_cast(hB.data())),
