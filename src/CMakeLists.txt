@@ -1,7 +1,8 @@
 add_executable(gisle
                main.cpp
                lattice.cpp
-               lattice.hpp)
+               lattice.hpp
+               util.hpp)
 
 # set standard
 set_target_properties(gisle PROPERTIES

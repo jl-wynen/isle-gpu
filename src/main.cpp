@@ -7,6 +7,7 @@
 #include <blaze/Blaze.h>
 
 #include "lattice.hpp"
+#include "util.hpp"
 #include "cpu/cpu.hpp"
 #include "gpu/gpu.cuh"
 
@@ -18,16 +19,15 @@ int main()
     constexpr double U = 4;
     constexpr double beta = 6;
 
-    blaze::DynamicVector<std::complex<double>> phi(hopping.rows() * nt, 1.0);
     std::mt19937 rng(12456);
-    std::normal_distribution<double> dist(0, sqrt(U * beta / nt));
-    std::generate(phi.begin(), phi.end(), [&]() mutable { return dist(rng); });
+    auto phi = makeRandomConfig(0, sqrt(U * beta / nt),
+                                hopping.rows() * nt, rng);
 
     auto cpuLDM = cpu::logdetM(hopping, phi, beta);
     std::cout << "CPU: " << cpuLDM[0] << ' ' << cpuLDM[1] << '\n';
 
 
-    auto gpuLDM = gpu::logdetM(flatMatrix(blaze::DynamicMatrix<double, blaze::columnMajor>(hopping * beta / nt)).data(),
+    auto gpuLDM = gpu::logdetM(flatHoppingMatrix(hopping * beta / nt).data(),
                                phi.data(),
                                hopping.rows(),
                                nt,
