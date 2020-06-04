@@ -4,9 +4,6 @@
 
 #include <blaze/Blaze.h>
 
-template <typename T>
-constexpr T pi = static_cast<T>(3.1415926535897932384626433832795028841971693993751058209749L);
-
 std::complex<double> toFirstLogBranch(const std::complex<double> &x)
 {
     return { std::real(x), std::remainder(std::imag(x), 2 * pi<double>) };
