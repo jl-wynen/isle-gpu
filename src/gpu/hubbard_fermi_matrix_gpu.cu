@@ -4,6 +4,7 @@
 #include <thrust/fill.h>
 
 #include "math.hpp"
+#include "gpumath.cuh"
 
 using namespace std::complex_literals;
 
@@ -255,10 +256,13 @@ std::complex<double> logdetM_p(const HubbardFermiMatrixGPU &hfm,
     }
 
     addIdentiy<<<(NX + 255) / 256, 256>>>(thrust::raw_pointer_cast(B.data()), NX);
+    auto result = cudaGetLastError();
+    if (result != cudaSuccess) {
+        throw std::runtime_error(std::string("Failed to add identity: ")
+                                 + cudaGetErrorString(result));
+    }
 
-    thrust::host_vector<thrust::complex<double>> hB = B;
-    return toFirstLogBranch(logdet(reinterpret_cast<std::complex<double> *>(thrust::raw_pointer_cast(hB.data())),
-                                   NX));
+    return toFirstLogBranch(ilogdet(B, NX, hfm.cublasHandle()));
 }
 
 //// Use version -i Phi - N_t log(det(e^{-sigmaKappa*kappa-mu})) + log(det(1+hat{A}^{-1})).

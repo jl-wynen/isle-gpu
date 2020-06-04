@@ -4,7 +4,7 @@ add_library(isle_gpu STATIC
             gpu.cu
             gpu.cuh
             math.cpp
-            math.hpp)
+            math.hpp gpumath.cu gpumath.cuh)
 
 # set standard
 set_target_properties(isle_gpu PROPERTIES
