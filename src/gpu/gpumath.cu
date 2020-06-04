@@ -3,6 +3,9 @@
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/reduce.h>
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/transform_iterator.h>
+#include <thrust/iterator/permutation_iterator.h>
 
 #include "math.hpp"
 
@@ -20,7 +23,17 @@ __global__ void logOfDiagonal(thrust::complex<double> *matrix,
     }
 }
 
-/// Perform an PLU decomposition of mat in place.
+/// Store 1 (true) for each row that has been swapped in the pivot array.
+__global__ void findSwaps(int *ipiv,
+                          int n)
+{
+    int const i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        ipiv[i] = (ipiv[i] - 1 != i);
+    }
+}
+
+/// Perform a PLU decomposition of mat in place.
 void luDecomp(cuDoubleComplex *mat,
               int const n,
               int *ipiv,
@@ -75,15 +88,18 @@ thrust::complex<double>
              thrust::raw_pointer_cast(ipiv.data()),
              handle);
 
-    thrust::host_vector<int> hipiv = ipiv;
-    bool negDetP = false;  // if true det(P) == -1, else det(P) == +1
-    for (std::size_t i = 0; i < n; ++i) {
-        // determinant of pivot matrix P
-        if (hipiv[i] - 1 != i) {
-            negDetP = !negDetP;
-        }
+    // determinant of permutation matrix P
+    findSwaps<<<(n + 255) / 256, 256>>>(thrust::raw_pointer_cast(ipiv.data()), n);
+    auto swapResult = cudaGetLastError();
+    if (swapResult != cudaSuccess) {
+        throw std::runtime_error(std::string("Failed to call kernel findSwaps: ")
+                                 + cudaGetErrorString(swapResult));
     }
+    bool const negDetP = thrust::reduce(
+      ipiv.begin(), ipiv.end(), 0,
+      [] __device__(int a, int b) { return a ^ b; }) == 1;
 
+    // determinant of U
     logOfDiagonal<<<(n + 255) / 256, 256>>>(thrust::raw_pointer_cast(mat.data()), n);
     auto logResult = cudaGetLastError();
     if (logResult != cudaSuccess) {
