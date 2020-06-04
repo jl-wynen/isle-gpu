@@ -58,6 +58,9 @@ HubbardFermiMatrixCPU::HubbardFermiMatrixCPU(const DSparseMatrix &kappaTilde,
     if (kappaTilde.rows() != kappaTilde.columns()) {
         throw std::invalid_argument("Hopping matrix is not square.");
     }
+    if (muTilde != 0.0) {
+        throw std::invalid_argument("mu must be zero");
+    }
 }
 
 const DMatrix &HubbardFermiMatrixCPU::expKappa(const Species species, const bool inv) const
