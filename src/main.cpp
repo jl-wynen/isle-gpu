@@ -6,38 +6,15 @@
 
 #include <blaze/Blaze.h>
 
+#include "lattice.hpp"
 #include "cpu/cpu.hpp"
 #include "gpu/gpu.cuh"
-
-auto makeTriangle()
-{
-    blaze::CompressedMatrix<double> hopping(3, 3);
-    hopping.set(0, 1, 1.0);
-    hopping.set(1, 0, 1.0);
-    hopping.set(0, 2, 1.0);
-    hopping.set(2, 0, 1.0);
-    hopping.set(1, 2, 1.0);
-    hopping.set(2, 1, 1.0);
-    return hopping;
-}
-
-template <typename T>
-auto flatMatrix(blaze::DynamicMatrix<T, blaze::columnMajor> const &matrix)
-{
-    std::vector<T> flat(matrix.rows() * matrix.columns());
-    for (std::size_t i = 0; i < matrix.rows(); ++i) {
-        for (std::size_t j = 0; j < matrix.columns(); ++j) {
-            flat[j * matrix.rows() + i] = matrix(i, j);
-        }
-    }
-    return flat;
-}
 
 
 int main()
 {
     auto hopping = makeTriangle();
-    constexpr size_t nt = 64;
+    constexpr size_t nt = 4;
     constexpr double U = 4;
     constexpr double beta = 6;
 
