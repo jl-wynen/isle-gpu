@@ -14,4 +14,5 @@ set_target_properties(isle_gpu PROPERTIES
 set_target_properties(isle_gpu
                       PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda")
 target_link_libraries(isle_gpu -lcublas)
