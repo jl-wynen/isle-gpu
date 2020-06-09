@@ -14,7 +14,7 @@
 
 int main()
 {
-    auto hopping = makeTriangle();
+    auto hopping = makeHopping("triangle");
     constexpr size_t nt = 4;
     constexpr double U = 4;
     constexpr double beta = 6;
